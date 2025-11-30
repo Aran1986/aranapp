@@ -21,18 +21,30 @@ function AppContent() {
   }, [theme])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100vh',
+      overflow: 'hidden'
+    }}>
       <Header />
       <HeaderTab />
+      
       <div style={{ 
         flex: 1, 
         display: 'flex', 
         flexDirection: 'column',
-        overflow: 'hidden'
+        marginLeft: '35px',
+        marginRight: '35px',
+        marginTop: '0',
+        marginBottom: '0',
+        overflow: 'hidden',
+        position: 'relative'
       }}>
         <TabSystem />
         <MainContent />
       </div>
+      
       <Footer />
       <FooterTab />
       

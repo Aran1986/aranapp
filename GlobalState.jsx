@@ -1,21 +1,36 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 const GlobalContext = createContext()
 
 export const GlobalProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [theme, setTheme] = useState('light')
-  const [activeTabs, setActiveTabs] = useState([])
+  const [activeTabs, setActiveTabs] = useState([
+    { id: 'welcome', title: 'خوشآمدید', icon: '🏠', active: true, isWelcome: true }
+  ])
   const [activeAccordion, setActiveAccordion] = useState(null)
 
   const addTab = (tab) => {
-    if (!activeTabs.find(t => t.id === tab.id)) {
-      setActiveTabs([...activeTabs, tab])
+    // حذف تب خوشآمدگویی وقتی اولین ماول باز میشه
+    const filteredTabs = activeTabs.filter(t => !t.isWelcome)
+    
+    if (!filteredTabs.find(t => t.id === tab.id)) {
+      setActiveTabs([...filteredTabs.map(t => ({ ...t, active: false })), { ...tab, active: true }])
+    } else {
+      setActiveTabs(filteredTabs.map(t => ({ ...t, active: t.id === tab.id })))
     }
   }
 
   const removeTab = (tabId) => {
-    setActiveTabs(activeTabs.filter(t => t.id !== tabId))
+    const newTabs = activeTabs.filter(t => t.id !== tabId)
+    if (newTabs.length === 0) {
+      setActiveTabs([{ id: 'welcome', title: 'خوشآمدید', icon: '🏠', active: true, isWelcome: true }])
+    } else {
+      if (activeTabs.find(t => t.id === tabId)?.active) {
+        newTabs[newTabs.length - 1].active = true
+      }
+      setActiveTabs(newTabs)
+    }
   }
 
   const setCurrentTab = (tabId) => {
