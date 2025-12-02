@@ -5,15 +5,35 @@ const GlobalContext = createContext()
 
 export const GlobalProvider = ({ children }) => {
   const [user, setUser] = useState(null)
-  const [theme, setTheme] = useState('light')
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light'
+  })
   const [activeTabs, setActiveTabs] = useState([
     { id: 'welcome', title: 'خوشآمدید', icon: '🏠', active: true, isWelcome: true }
   ])
   const [activeAccordion, setActiveAccordion] = useState(null)
-  const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  
+  // 🔥 لود از localStorage
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem('aranapp-notifications')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [unreadCount, setUnreadCount] = useState(() => {
+    const saved = localStorage.getItem('aranapp-unread-count')
+    return saved ? parseInt(saved) : 0
+  })
 
-  // گوش دادن به wallet:balance-changed در سطح کل اپلیکیشن
+  // ذخیره تم
+  useEffect(() => {
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  // 🔥 ذخیره نوتیفها
+  useEffect(() => {
+    localStorage.setItem('aranapp-notifications', JSON.stringify(notifications))
+    localStorage.setItem('aranapp-unread-count', unreadCount.toString())
+  }, [notifications, unreadCount])
+
   useEffect(() => {
     console.log('🌍 GlobalState: شروع گوش دادن به wallet events')
     
@@ -32,13 +52,9 @@ export const GlobalProvider = ({ children }) => {
         data: data
       }
 
-      setNotifications(prev => {
-        console.log('➕ اضافه شد به GlobalState')
-        return [newNotification, ...prev]
-      })
+      setNotifications(prev => [newNotification, ...prev])
       setUnreadCount(prev => prev + 1)
 
-      // نوتیفیکیشن سیستمی
       if (Notification.permission === 'granted') {
         new Notification('AranApp - کیف پول', {
           body: newNotification.message,
@@ -47,15 +63,11 @@ export const GlobalProvider = ({ children }) => {
       }
     })
 
-    // درخواست دسترسی نوتیفیکیشن
     if (Notification.permission === 'default') {
       Notification.requestPermission()
     }
 
-    return () => {
-      console.log('🔴 GlobalState: توقف گوش دادن')
-      unsubscribe()
-    }
+    return () => unsubscribe()
   }, [])
 
   const addTab = (tab) => {
