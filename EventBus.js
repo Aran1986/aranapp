@@ -1,4 +1,4 @@
-﻿class EventBus {
+class EventBus {
   constructor() {
     this.events = {}
   }
@@ -15,6 +15,7 @@
   }
 
   emit(eventName, data) {
+    console.log('🔔 EventBus emit:', eventName, data)
     if (this.events[eventName]) {
       this.events[eventName].forEach(callback => callback(data))
     }

@@ -53,7 +53,7 @@ export default function Sidebar4() {
         top: 'var(--header-height)',
         bottom: 'var(--footer-height)',
         width: '220px',
-        background: 'rgba(248, 250, 252, 0.98)',
+        background: 'var(--surface)',
         backdropFilter: 'blur(20px)',
         borderRight: '1px solid var(--border)',
         zIndex: 99,
@@ -83,7 +83,9 @@ export default function Sidebar4() {
             borderRadius: '8px',
             border: '1px solid var(--border)',
             fontSize: '12px',
-            textAlign: 'right'
+            textAlign: 'right',
+            background: 'var(--background)',
+            color: 'var(--text-primary)'
           }}
         />
 
@@ -94,7 +96,7 @@ export default function Sidebar4() {
               width: '100%',
               padding: '8px 12px',
               marginBottom: '6px',
-              background: 'white',
+              background: 'var(--background)',
               borderRadius: '8px',
               border: '1px solid var(--border)',
               display: 'flex',
@@ -102,14 +104,16 @@ export default function Sidebar4() {
               gap: '10px',
               transition: 'var(--transition)',
               fontSize: '12px',
-              textAlign: 'right'
+              textAlign: 'right',
+              cursor: 'pointer',
+              color: 'var(--text-primary)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--primary-color)'
               e.currentTarget.style.color = 'white'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.background = 'var(--background)'
               e.currentTarget.style.color = 'var(--text-primary)'
             }}
           >

@@ -1,0 +1,3391 @@
+.env 
+VITE_APP_NAME=AranApp
+
+
+.gitignore
+node_modules
+dist
+.env.local
+.DS_Store
+*.log
+
+app.jsx
+import { useEffect } from 'react'
+import { GlobalProvider, useGlobal } from './GlobalState'
+import Header from './Header'
+import Footer from './Footer'
+import Sidebar1 from './Sidebar1'
+import Sidebar2 from './Sidebar2'
+import Sidebar3 from './Sidebar3'
+import Sidebar4 from './Sidebar4'
+import Sidebar5 from './Sidebar5'
+import Sidebar6 from './Sidebar6'
+import HeaderTab from './HeaderTab'
+import FooterTab from './FooterTab'
+import TabSystem from './TabSystem'
+import MainContent from './MainContent'
+
+function AppContent() {
+  const { theme } = useGlobal()
+  
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
+  return (
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100vh',
+      overflow: 'hidden'
+    }}>
+      <Header />
+      <HeaderTab />
+      
+      <div style={{ 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column',
+        marginLeft: '35px',
+        marginRight: '35px',
+        marginTop: '0',
+        marginBottom: '0',
+        overflow: 'hidden',
+        position: 'relative'
+      }}>
+        <TabSystem />
+        <MainContent />
+      </div>
+      
+      <Footer />
+      <FooterTab />
+      
+      <Sidebar1 />
+      <Sidebar2 />
+      <Sidebar3 />
+      <Sidebar4 />
+      <Sidebar5 />
+      <Sidebar6 />
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <GlobalProvider>
+      <AppContent />
+    </GlobalProvider>
+  )
+}
+
+export default App
+
+
+electron.cjs
+const { app, BrowserWindow } = require('electron')
+const path = require('path')
+
+let mainWindow
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true
+    },
+    frame: true,
+    icon: path.join(__dirname, 'icon.png')
+  })
+
+  if (process.env.NODE_ENV === 'development') {
+    mainWindow.loadURL('http://localhost:3000')
+    mainWindow.webContents.openDevTools()
+  } else {
+    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'))
+  }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null
+  })
+}
+
+app.whenReady().then(createWindow)
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow()
+  }
+})
+
+
+eventbus.js
+class EventBus {
+  constructor() {
+    this.events = {}
+  }
+
+  on(eventName, callback) {
+    if (!this.events[eventName]) {
+      this.events[eventName] = []
+    }
+    this.events[eventName].push(callback)
+    
+    return () => {
+      this.events[eventName] = this.events[eventName].filter(cb => cb !== callback)
+    }
+  }
+
+  emit(eventName, data) {
+    if (this.events[eventName]) {
+      this.events[eventName].forEach(callback => callback(data))
+    }
+  }
+
+  off(eventName) {
+    delete this.events[eventName]
+  }
+}
+
+export default new EventBus()
+
+
+
+
+footer,jsx
+import { useState } from 'react'
+
+export default function Footer() {
+  const [message, setMessage] = useState('')
+
+  return (
+    <footer style={{
+      height: 'var(--footer-height)',
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0 15px',
+      gap: '15px',
+      fontSize: '12px'
+    }}>
+      {/* اطلاعات سیستم - سمت راست */}
+      <div style={{ display: 'flex', gap: '15px', alignItems: 'center', minWidth: '300px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+          <span>🕐</span>
+          <span>{new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+          <span>📅</span>
+          <span>{new Date().toLocaleDateString('fa-IR', { day: '2-digit', month: '2-digit' })}</span>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981' }}>
+          <span>🌐</span>
+          <span>متصل</span>
+        </div>
+      </div>
+
+      {/* چت باکس - وسط */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        background: 'var(--background)',
+        borderRadius: '10px',
+        padding: '6px 10px',
+        border: '1px solid var(--border)',
+        gap: '8px'
+      }}>
+        <button style={chatIconStyle} title="الصاق فایل">
+          📎
+        </button>
+        <button style={chatIconStyle} title="الصاق تصویر">
+          🖼️
+        </button>
+        <button style={chatIconStyle} title="ایموجی">
+          😊
+        </button>
+        
+        <input
+          type="text"
+          placeholder="پیام خود را بنویسید..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          style={{
+            flex: 1,
+            background: 'none',
+            border: 'none',
+            outline: 'none',
+            fontSize: '12px',
+            color: 'var(--text-primary)',
+            direction: 'rtl'
+          }}
+        />
+
+        <button style={chatIconStyle} title="ضبط صدا">
+          🎤
+        </button>
+        <button style={{
+          ...chatIconStyle,
+          background: 'var(--primary-color)',
+          color: 'white'
+        }} title="ارسال">
+          ➤
+        </button>
+      </div>
+
+      {/* اطلاعات اضافی - سمت چپ */}
+      <div style={{ display: 'flex', gap: '15px', alignItems: 'center', minWidth: '200px', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+          <span>🔋</span>
+          <span>85%</span>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--text-secondary)' }}>
+          <span>💾</span>
+          <span>12 GB</span>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+const chatIconStyle = {
+  width: '28px',
+  height: '28px',
+  borderRadius: '6px',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: '14px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.2s ease'
+}
+
+
+
+FooterTab.jsx
+import { useGlobal } from './GlobalState'
+
+export default function FooterTab() {
+  const { activeAccordion, openAccordion } = useGlobal()
+  const isOpen = activeAccordion === 'footer'
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('footer')}
+        style={{
+          position: 'fixed',
+          bottom: isOpen ? 'calc(var(--footer-height) * 2 - 5px)' : 'calc(var(--footer-height) - 5px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '120px',
+          height: '25px',
+          background: isOpen ? 'rgba(14, 165, 233, 0.95)' : 'rgba(14, 165, 233, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '10px 10px 0 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 101,
+          fontSize: '11px',
+          fontWeight: 'bold',
+          color: 'white',
+          transition: 'bottom 0.3s ease, background 0.3s ease',
+          boxShadow: isOpen ? '0 -2px 8px rgba(14, 165, 233, 0.3)' : 'none'
+        }}
+      >
+        📊 اطلاعات سیستم
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        bottom: 'var(--footer-height)',
+        left: 0,
+        right: 0,
+        height: isOpen ? 'var(--footer-height)' : '0',
+        background: 'rgba(14, 165, 233, 0.95)',
+        backdropFilter: 'blur(20px)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        padding: '0 30px',
+        color: 'white',
+        fontSize: '12px',
+        transition: 'height 0.3s ease',
+        overflow: 'hidden'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>💻</span>
+          <span>CPU: 45%</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>🧠</span>
+          <span>RAM: 8.2/16 GB</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>🌡️</span>
+          <span>دما: 52°C</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>📶</span>
+          <span>سرعت: 45 Mbps</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>💽</span>
+          <span>دیسک: 256/512 GB</span>
+        </div>
+      </div>
+    </>
+  )
+}
+
+
+
+global.css
+@import './variables.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--background);
+  color: var(--text-primary);
+  direction: rtl;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+
+GlobalState.jsx
+import { createContext, useContext, useState, useEffect } from 'react'
+
+const GlobalContext = createContext()
+
+export const GlobalProvider = ({ children }) => {
+  const [user, setUser] = useState(null)
+  const [theme, setTheme] = useState('light')
+  const [activeTabs, setActiveTabs] = useState([
+    { id: 'welcome', title: 'خوشآمدید', icon: '🏠', active: true, isWelcome: true }
+  ])
+  const [activeAccordion, setActiveAccordion] = useState(null)
+
+  const addTab = (tab) => {
+    // حذف تب خوشآمدگویی وقتی اولین ماول باز میشه
+    const filteredTabs = activeTabs.filter(t => !t.isWelcome)
+    
+    if (!filteredTabs.find(t => t.id === tab.id)) {
+      setActiveTabs([...filteredTabs.map(t => ({ ...t, active: false })), { ...tab, active: true }])
+    } else {
+      setActiveTabs(filteredTabs.map(t => ({ ...t, active: t.id === tab.id })))
+    }
+  }
+
+  const removeTab = (tabId) => {
+    const newTabs = activeTabs.filter(t => t.id !== tabId)
+    if (newTabs.length === 0) {
+      setActiveTabs([{ id: 'welcome', title: 'خوشآمدید', icon: '🏠', active: true, isWelcome: true }])
+    } else {
+      if (activeTabs.find(t => t.id === tabId)?.active) {
+        newTabs[newTabs.length - 1].active = true
+      }
+      setActiveTabs(newTabs)
+    }
+  }
+
+  const setCurrentTab = (tabId) => {
+    setActiveTabs(activeTabs.map(t => ({ ...t, active: t.id === tabId })))
+  }
+
+  const openAccordion = (accordionId) => {
+    setActiveAccordion(activeAccordion === accordionId ? null : accordionId)
+  }
+
+  const value = {
+    user,
+    setUser,
+    theme,
+    setTheme,
+    activeTabs,
+    addTab,
+    removeTab,
+    setCurrentTab,
+    activeAccordion,
+    openAccordion
+  }
+
+  return <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>
+}
+
+export const useGlobal = () => {
+  const context = useContext(GlobalContext)
+  if (!context) {
+    throw new Error('useGlobal باید داخل GlobalProvider استفاده بشه')
+  }
+  return context
+}
+
+
+
+Header.jsx
+import { useGlobal } from './GlobalState'
+import ProgressTracker from './ProgressTracker/ProgressTracker'
+import { useState, useEffect } from 'react'
+import { getModuleStatus, loadModule } from './moduleLoader'
+
+export default function Header() {
+  const { theme, setTheme, addTab } = useGlobal()
+  const [notificationStatus, setNotificationStatus] = useState('not-installed')
+
+  useEffect(() => {
+    const status = getModuleStatus('notifications')
+    setNotificationStatus(status)
+  }, [])
+
+  const handleNotificationClick = async () => {
+    if (notificationStatus === 'ready') {
+      const NotificationComponent = await loadModule('notifications')
+      if (NotificationComponent) {
+        addTab({
+          id: 'notifications',
+          title: 'اعلانها',
+          icon: '🔔',
+          active: true,
+          component: NotificationComponent
+        })
+      }
+    } else {
+      alert('ماول اعلانها هنوز نصب نشده است')
+    }
+  }
+
+  return (
+    <header style={{
+      height: 'var(--header-height)',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0 20px',
+      gap: '12px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ 
+        fontSize: '20px', 
+        fontWeight: 'bold',
+        color: 'white',
+        letterSpacing: '1px',
+        minWidth: '120px'
+      }}>
+        🌐 AranApp
+      </div>
+
+      <ProgressTracker />
+
+      <button style={iconButtonStyle} title="پروفایل">👤</button>
+      <button style={iconButtonStyle} title="تنظیمات">⚙️</button>
+      <button 
+        onClick={handleNotificationClick}
+        style={{
+          ...iconButtonStyle,
+          opacity: notificationStatus === 'ready' ? 1 : 0.5
+        }} 
+        title={notificationStatus === 'ready' ? 'اعلانها' : 'ماول نصب نشده'}
+      >
+        🔔
+      </button>
+      <button style={iconButtonStyle} title="تماس ویدئویی">📹</button>
+
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        background: 'rgba(255,255,255,0.2)',
+        borderRadius: '12px',
+        padding: '8px 15px',
+        backdropFilter: 'blur(10px)',
+        maxWidth: '600px',
+        margin: '0 15px'
+      }}>
+        <span style={{ marginLeft: '10px', fontSize: '16px' }}>🔍</span>
+        <input
+          type="text"
+          placeholder="جستجو یا وارد کردن آدرس..."
+          style={{
+            flex: 1,
+            background: 'none',
+            border: 'none',
+            outline: 'none',
+            color: 'white',
+            fontSize: '13px',
+            direction: 'rtl'
+          }}
+        />
+        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+          ↗️
+        </button>
+      </div>
+
+      <button style={iconButtonStyle} title="چت سریع">💬</button>
+      <button style={iconButtonStyle} title="تغییر زبان">🌐</button>
+      <button 
+        onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+        style={iconButtonStyle}
+        title={theme === 'light' ? 'حالت تاریک' : 'حالت روشن'}
+      >
+        {theme === 'light' ? '🌙' : '☀️'}
+      </button>
+      <button style={iconButtonStyle} title="نشانکها">⭐</button>
+    </header>
+  )
+}
+
+const iconButtonStyle = {
+  width: '38px',
+  height: '38px',
+  borderRadius: '50%',
+  background: 'rgba(255,255,255,0.2)',
+  color: 'white',
+  fontSize: '18px',
+  transition: 'all 0.3s ease',
+  backdropFilter: 'blur(10px)',
+  border: 'none',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center'
+}
+
+
+HeaderTab.jsx
+import { useGlobal } from './GlobalState'
+
+export default function HeaderTab() {
+  const { activeAccordion, openAccordion, addTab } = useGlobal()
+  const isOpen = activeAccordion === 'header'
+
+  const workTools = [
+    { id: 'code-editor', title: 'ویرایشگر کد', icon: '💻' },
+    { id: 'terminal', title: 'ترمینال', icon: '⌨️' },
+    { id: 'api-tester', title: 'تست API', icon: '🔌' },
+    { id: 'database', title: 'دیتابیس', icon: '🗄️' },
+    { id: 'git', title: 'گیت', icon: '🔀' },
+    { id: 'word', title: 'ورد', icon: '📄' },
+    { id: 'excel', title: 'اکسل', icon: '📊' },
+    { id: 'powerpoint', title: 'پاورپوینت', icon: '📽️' },
+    { id: 'pdf-editor', title: 'ویرایشگر PDF', icon: '📑' },
+    { id: 'designer', title: 'طراحی گرافیک', icon: '🎨' }
+  ]
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('header')}
+        style={{
+          position: 'fixed',
+          top: isOpen ? 'calc(var(--header-height) * 2 - 5px)' : 'calc(var(--header-height) - 5px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '130px',
+          height: '25px',
+          background: isOpen ? 'rgba(139, 92, 246, 0.95)' : 'rgba(139, 92, 246, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '0 0 10px 10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 101,
+          fontSize: '11px',
+          fontWeight: 'bold',
+          color: 'white',
+          transition: 'top 0.3s ease, background 0.3s ease',
+          boxShadow: isOpen ? '0 2px 8px rgba(139, 92, 246, 0.3)' : 'none'
+        }}
+      >
+        🛠️ ابزار کاری
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        top: 'var(--header-height)',
+        left: 0,
+        right: 0,
+        height: isOpen ? 'var(--header-height)' : '0',
+        background: 'rgba(139, 92, 246, 0.95)',
+        backdropFilter: 'blur(20px)',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '0 30px',
+        gap: '10px',
+        color: 'white',
+        transition: 'height 0.3s ease',
+        overflow: 'hidden'
+      }}>
+        {workTools.map(tool => (
+          <button
+            key={tool.id}
+            onClick={() => {
+              addTab({ ...tool, active: true })
+              openAccordion(null)
+            }}
+            style={{
+              padding: '8px 12px',
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: '8px',
+              border: 'none',
+              color: 'white',
+              fontSize: '11px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.3)'
+              e.currentTarget.style.transform = 'translateY(-2px)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.2)'
+              e.currentTarget.style.transform = 'translateY(0)'
+            }}
+          >
+            <span style={{ fontSize: '16px' }}>{tool.icon}</span>
+            <span>{tool.title}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+
+
+HOW_TO_INSTALL_PROGRESS.md
+# راهنمای نصب ProgressTracker در Header
+
+## مرحله 1: وارد کردن ماول
+در فایل Header.jsx این خط رو اضافه کن:
+
+\\\javascript
+import ProgressTracker from './ProgressTracker/ProgressTracker'
+\\\
+
+## مرحله 2: اضافه کردن به UI
+داخل return در Header.jsx بعد از نام AranApp این کد رو اضافه کن:
+
+\\\javascript
+<ProgressTracker />
+\\\
+
+## مثال کامل Header.jsx:
+
+\\\javascript
+import { useGlobal } from './GlobalState'
+import ProgressTracker from './ProgressTracker/ProgressTracker'
+
+export default function Header() {
+  const { theme, setTheme } = useGlobal()
+
+  return (
+    <header style={{
+      height: 'var(--header-height)',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0 30px',
+      gap: '20px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+    }}>
+      <div style={{ 
+        fontSize: '24px', 
+        fontWeight: 'bold',
+        color: 'white',
+        letterSpacing: '1px'
+      }}>
+        🌐 AranApp
+      </div>
+
+      {/* اضافه کردن ProgressTracker اینجا */}
+      <ProgressTracker />
+
+      <div style={{ flex: 1 }} />
+
+      <button 
+        onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+        style={{
+          width: '45px',
+          height: '45px',
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.2)',
+          color: 'white',
+          fontSize: '20px',
+          transition: 'var(--transition)',
+          backdropFilter: 'blur(10px)'
+        }}
+        onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.3)'}
+        onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+      >
+        {theme === 'light' ? '🌙' : '☀️'}
+      </button>
+    </header>
+  )
+}
+\\\
+
+## نکته مهم:
+فایل roadmaptocomplete.txt باید در پوشه public کپی بشه تا مرورگر بتونه بخونه:
+
+\\\powershell
+Copy-Item "E:\projects\aranapp\roadmaptocomplete.txt" -Destination "E:\projects\aranapp\public\" -Force
+\\\
+
+## حذف بعد از تکمیل:
+وقتی 100 ماول تکمیل شد:
+1. خط import رو از Header.jsx حذف کن
+2. کامپوننت <ProgressTracker /> رو حذف کن
+3. پوشه ProgressTracker رو حذف کن
+4. فایل roadmaptocomplete.txt رو حذف کن
+
+
+index.html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AranApp</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/main.jsx"></script>
+</body>
+</html>
+
+
+main.jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './global.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
+
+
+
+MainContent.jsx
+import { useGlobal } from './GlobalState'
+import { useState, Suspense } from 'react'
+
+export default function MainContent() {
+  const { activeTabs } = useGlobal()
+  const [isMaximized, setIsMaximized] = useState(false)
+
+  const activeTab = activeTabs.find(t => t.active) || null
+
+  return (
+    <main style={{
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      background: '#f0f0f0',
+      position: 'relative',
+      padding: '10px'
+    }}>
+      <div style={{
+        width: '100%',
+        height: '100%',
+        border: '3px solid #667eea',
+        borderRadius: '12px',
+        background: 'white',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)'
+      }}>
+        <button
+          onClick={() => setIsMaximized(!isMaximized)}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            left: '20px',
+            zIndex: 10,
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            background: 'white',
+            border: '2px solid var(--border)',
+            cursor: 'pointer',
+            fontSize: '18px',
+            transition: 'var(--transition)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}
+          title={isMaximized ? 'بازگرداندن' : 'تمام صفحه'}
+        >
+          {isMaximized ? '📉' : '📈'}
+        </button>
+
+        <div style={{
+          width: '100%',
+          height: '100%',
+          overflow: 'auto',
+          padding: '20px'
+        }}>
+          {activeTab?.isWelcome ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              textAlign: 'center',
+              gap: '20px'
+            }}>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>🌐</div>
+              <h1 style={{
+                fontSize: '36px',
+                fontWeight: 'bold',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                marginBottom: '10px'
+              }}>
+                به AranApp خوش آمدید
+              </h1>
+              <p style={{
+                fontSize: '18px',
+                color: 'var(--text-secondary)',
+                maxWidth: '600px',
+                lineHeight: '1.8'
+              }}>
+                ماول کیف پول 💰 و اعلانها 🔔 نصب شدهاند!
+                <br />
+                از نوار کناری راست کیف پول را باز کنید و آن را شار کنید تا اعلان دریافت کنید.
+              </p>
+            </div>
+          ) : activeTab?.component ? (
+            <Suspense fallback={<div style={{ textAlign: 'center', padding: '50px' }}>در حال بارگذاری...</div>}>
+              <activeTab.component />
+            </Suspense>
+          ) : (
+            <div style={{ padding: '30px' }}>
+              <h2 style={{ fontSize: '28px', marginBottom: '15px' }}>
+                <span style={{ fontSize: '36px', marginLeft: '10px' }}>{activeTab?.icon}</span>
+                {activeTab?.title}
+              </h2>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                این ماول هنوز ساخته نشده است
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isMaximized && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'white',
+          zIndex: 1000,
+          padding: '20px',
+          overflow: 'auto'
+        }}>
+          <button
+            onClick={() => setIsMaximized(false)}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              left: '20px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              fontSize: '20px',
+              zIndex: 1001
+            }}
+          >
+            ✕
+          </button>
+          
+          {activeTab?.component && (
+            <div style={{ marginTop: '60px' }}>
+              <Suspense fallback={<div>در حال بارگذاری...</div>}>
+                <activeTab.component />
+              </Suspense>
+            </div>
+          )}
+        </div>
+      )}
+    </main>
+  )
+}
+
+
+
+moduleLoader.js
+/**
+ * Module Loader - سیستم مرکزی مدیریت ماولها
+ */
+
+export const MODULE_REGISTRY = {
+  // ==================== هدر اصلی ====================
+  notifications: {
+    id: 'notifications',
+    name: 'اعلانها',
+    icon: '🔔',
+    category: 'core',
+    sidebar: 'header-main',
+    apiKey: '',
+    dependencies: [],
+    events: {
+      emit: ['notification:shown'],
+      listen: ['wallet:balance-changed', 'payment:completed']
+    }
+  },
+
+  // ==================== سایدبار 1: مالی ====================
+  wallet: {
+    id: 'wallet',
+    name: 'کیف پول',
+    icon: '💰',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: [],
+    events: {
+      emit: ['wallet:balance-changed', 'wallet:payment-completed'],
+      listen: []
+    }
+  },
+  exchange: {
+    id: 'exchange',
+    name: 'صرافی',
+    icon: '💱',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['exchange:trade-completed'],
+      listen: ['wallet:balance-changed']
+    }
+  },
+  payment: {
+    id: 'payment',
+    name: 'پرداخت',
+    icon: '💳',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['payment:request', 'payment:completed'],
+      listen: ['wallet:balance-changed']
+    }
+  },
+  investment: {
+    id: 'investment',
+    name: 'سرمایهگذاری',
+    icon: '📈',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['investment:order-placed'],
+      listen: ['wallet:balance-changed']
+    }
+  },
+  budget: {
+    id: 'budget',
+    name: 'بودجه',
+    icon: '💵',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['budget:alert'],
+      listen: ['payment:completed']
+    }
+  },
+  insurance: {
+    id: 'insurance',
+    name: 'بیمه',
+    icon: '🛡️',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['insurance:claim'],
+      listen: []
+    }
+  },
+  loan: {
+    id: 'loan',
+    name: 'وام',
+    icon: '🏦',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['loan:approved'],
+      listen: []
+    }
+  },
+  crowdfunding: {
+    id: 'crowdfunding',
+    name: 'سرمایهجمعی',
+    icon: '🤝',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['crowdfunding:campaign-created'],
+      listen: []
+    }
+  },
+  staking: {
+    id: 'staking',
+    name: 'استیکینگ',
+    icon: '⛏️',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['staking:rewards'],
+      listen: []
+    }
+  },
+  tax: {
+    id: 'tax',
+    name: 'مالیات',
+    icon: '📋',
+    category: 'financial',
+    sidebar: 'sidebar1',
+    apiKey: '',
+    dependencies: ['wallet'],
+    events: {
+      emit: ['tax:report-generated'],
+      listen: []
+    }
+  }
+}
+
+/**
+ * چک کردن اینکه آیا ماول نصب شده
+ */
+export function isModuleInstalled(moduleId) {
+  try {
+    // تلاش برای import ماول
+    const path = `./modules/${moduleId}/index.jsx`
+    // در محیط واقعی این چک میکنه فایل وجود داره یا نه
+    // برای تست ماولهای wallet و notifications رو installed حساب میکنیم
+   return ['wallet', 'notifications', 'calculator', 'investment'].includes(moduleId)
+  } catch {
+    return false
+  }
+}
+
+/**
+ * بارگذاری دینامیک ماول
+ */
+export async function loadModule(moduleId) {
+  try {
+    const module = await import(`./modules/${moduleId}/index.jsx`)
+    return module.default
+  } catch (error) {
+    console.error(`خطا در بارگذاری ماول ${moduleId}:`, error)
+    return null
+  }
+}
+
+/**
+ * دریافت وضعیت ماول
+ */
+export function getModuleStatus(moduleId) {
+  const module = MODULE_REGISTRY[moduleId]
+  if (!module) return 'unknown'
+  
+  const installed = isModuleInstalled(moduleId)
+  
+  if (!installed) return 'not-installed'
+  
+  // چک کردن وابستگیها
+  const missingDeps = module.dependencies.filter(dep => !isModuleInstalled(dep))
+  if (missingDeps.length > 0) return 'missing-dependencies'
+  
+  return 'ready'
+}
+
+/**
+ * دریافت ماولهای یک سایدبار
+ */
+export function getModulesBySidebar(sidebarId) {
+  return Object.values(MODULE_REGISTRY).filter(m => m.sidebar === sidebarId)
+}
+
+/**
+ * دریافت رنگ بر اساس وضعیت
+ */
+export function getStatusColor(status) {
+  switch (status) {
+    case 'ready':
+      return '#10b981' // سبز
+    case 'not-installed':
+      return '#9ca3af' // خاکستری
+    case 'missing-dependencies':
+      return '#f59e0b' // نارنجی
+    default:
+      return '#6b7280'
+  }
+}
+
+/**
+ * دریافت آیکون وضعیت
+ */
+export function getStatusIcon(status) {
+  switch (status) {
+    case 'ready':
+      return '✓'
+    case 'not-installed':
+      return '○'
+    case 'missing-dependencies':
+      return '⚠'
+    default:
+      return '?'
+  }
+}
+
+
+package.json
+{
+  "name": "aranapp",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "electron:build": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.aranapp.browser",
+    "productName": "AranApp",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.cjs"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    }
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "vite": "^5.4.2",
+    "wait-on": "^7.2.0"
+  }
+}
+
+
+
+
+
+
+
+PROJECT_GUIDE.md
+# 🌐 راهنمای جامع پروه AranApp
+
+## 📋 هدف پروه
+ساخت یک سوپراپ ماولار مبتنی بر وب۳ و بلاکچین که:
+- به صورت بروزر دسکتاپی با الکترون اجرا میشه
+- هر ماول یک SaaS مستقل و درآمدزاست
+- ماولها با Event Bus و API Key به هم متصل میشن
+- طراحی ماولار کامل (هر قطعه مستقل)
+
+---
+
+## 📁 ساختار دقیق پروه
+```
+E:\projects\aranapp\
+├── package.json          (وابستگیها + اسکریپتهای npm)
+├── vite.config.js        (تنظیمات ویت)
+├── electron.cjs          (فایل اصلی الکترون)
+├── .env                  (متغیرهای محیطی)
+├── index.html            (نقطه ورود HTML)
+├── main.jsx              (راهانداز React)
+├── App.jsx               (قطعه اصلی برنامه)
+├── EventBus.js           (اتوبوس رویداد - ارتباط ماولها)
+├── GlobalState.jsx       (مدیر حالت مشترک)
+├── Header.jsx            (هدر برنامه)
+├── Footer.jsx            (فوتر برنامه)
+├── Sidebar.jsx           (نوار کناری راست - منوی اصلی)
+├── MySidebar.jsx         (نوار کناری چپ - پروفایل)
+├── TabSystem.jsx         (سیستم تبها)
+├── MainContent.jsx       (محتوای اصلی)
+├── global.css            (استایل سراسری)
+├── variables.css         (متغیرهای CSS)
+└── modules/              (پوشه ماولها)
+    ├── currency-converter/
+    │   ├── index.jsx
+    │   ├── api.js
+    │   └── config.json
+    └── ... (سایر ماولها)
+```
+
+---
+
+## 🔧 نحوه اضافه کردن ماول جدید
+
+### گام 1: ساختار ماول
+```
+modules/
+└── نام-ماول/
+    ├── index.jsx         (قطعه اصلی ماول)
+    ├── api.js            (توابع API)
+    ├── config.json       (تنظیمات + API Key)
+    └── styles.module.css (استایل اختصاصی)
+```
+
+### گام 2: فایل config.json
+```json
+{
+  "id": "currency-converter",
+  "name": "تبدیل ارز",
+  "icon": "💱",
+  "apiKey": "MODULE_API_KEY_HERE",
+  "permissions": ["read", "write"]
+}
+```
+
+### گام 3: ثبت در Sidebar.jsx
+```javascript
+const modules = [
+  {
+    id: 'tools',
+    title: '🔧 ابزارها',
+    items: [
+      { 
+        id: 'currency-converter', 
+        title: 'تبدیل ارز', 
+        icon: '💱',
+        path: './modules/currency-converter'
+      }
+    ]
+  }
+]
+```
+
+### گام 4: بارگذاری دینامیک در MainContent.jsx
+```javascript
+const loadModule = async (moduleId) => {
+  const module = await import(`./modules/${moduleId}/index.jsx`)
+  return module.default
+}
+```
+
+---
+
+## 🔗 ارتباط بین ماولها
+
+### روش 1: Event Bus (توصیه شده)
+```javascript
+// ماول فرستنده (مثال: فروشگاه)
+import EventBus from '../../EventBus'
+
+EventBus.emit('payment.request', {
+  amount: 100,
+  currency: 'USD',
+  apiKey: config.apiKey
+})
+
+// ماول گیرنده (مثال: کیفپول)
+EventBus.on('payment.request', (data) => {
+  if (validateApiKey(data.apiKey)) {
+    processPayment(data)
+  }
+})
+```
+
+### روش 2: Shared Context
+```javascript
+// در GlobalState.jsx
+const [walletBalance, setWalletBalance] = useState(0)
+
+// استفاده در ماول
+const { walletBalance, setWalletBalance } = useGlobal()
+```
+
+### روش 3: API مستقیم (برای ماولهای خارجی)
+```javascript
+// modules/currency-converter/api.js
+export const callExternalModule = async (moduleApiKey, data) => {
+  const response = await fetch('https://external-module.com/api', {
+    headers: {
+      'X-API-Key': moduleApiKey
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+```
+
+---
+
+## ⚡ الکترون - بروزر دسکتاپی
+
+### اجرای حالت توسعه:
+```powershell
+npm run electron
+```
+
+### ساخت فایل نصبی:
+```powershell
+npm run electron:build
+```
+
+### فایل اصلی: electron.cjs
+- مدیریت پنجره برنامه
+- امنیت (contextIsolation, nodeIntegration)
+- بارگذاری محتوا (dev/production)
+
+---
+
+## 🔐 امنیت API Key
+
+### ذخیرهسازی:
+```javascript
+// در config.json هر ماول
+{
+  "apiKey": "SECURE_MODULE_KEY_12345",
+  "apiEndpoint": "https://api.module.com"
+}
+```
+
+### اعتبارسنجی:
+```javascript
+const validateApiKey = (key) => {
+  return key === moduleConfig.apiKey
+}
+
+EventBus.on('module.call', (data) => {
+  if (!validateApiKey(data.apiKey)) {
+    console.error('API Key نامعتبر')
+    return
+  }
+  // اجرای عملیات
+})
+```
+
+---
+
+## 📦 دستورات کلیدی
+```powershell
+# نصب وابستگیها
+npm install
+
+# اجرای وب (مرورگر)
+npm run dev
+
+# اجرای الکترون (بروزر دسکتاپی)
+npm run electron
+
+# ساخت نسخه تولید
+npm run build
+npm run electron:build
+
+# مشاهده در مرورگر
+# http://localhost:3000
+```
+
+---
+
+## 🎯 نکات کلیدی برای ادامه کار
+
+1. **همه چیز ماولار**: هر قطعه کد مستقل و قابل جایگزینی
+2. **Event Bus اولویت**: برای ارتباط ماولها همیشه Event Bus
+3. **API Key الزامی**: هر ماول باید کلید احراز هویت داشته باشه
+4. **بارگذاری تنبل**: ماولها فقط وقتی بارگذاری میشن که کاربر بخواد
+5. **الکترون = بروزر**: برنامه یک بروزر واقعی با قابلیت نصب هست
+
+---
+
+## 🚀 مثال کامل: اضافه کردن ماول تبدیل ارز
+
+1. فولدر بساز: `modules/currency-converter/`
+2. فایل `config.json` بساز با API Key
+3. فایل `index.jsx` بساز (UI ماول)
+4. فایل `api.js` بساز (لاجیک ارتباط)
+5. به `Sidebar.jsx` اضافه کن
+6. در `MainContent.jsx` بارگذاری دینامیک فعال کن
+
+---
+
+## 📞 الگوی ارتباط ماولها
+```
+┌─────────────┐
+│   Market    │──► emit('payment.request')
+└─────────────┘
+       │
+       ▼
+┌─────────────┐
+│  Event Bus  │ (با API Key)
+└─────────────┘
+       │
+       ▼
+┌─────────────┐
+│   Wallet    │──► on('payment.request') → validate → process
+└─────────────┘
+```
+
+---
+
+## 🎨 ساختار UI
+```
+┌──────────────────────────────────────────┐
+│            Header (دکمه تم)              │
+├────┬──────────────────────────────┬──────┤
+│ Z  │                              │  Z   │
+│ A  │                              │  A   │
+│ B  │       MainContent            │  B   │
+│ A  │       + TabSystem            │  A   │
+│ N  │                              │  N   │
+│ E  │                              │  E   │
+│    │                              │      │
+│ S  │                              │  P   │
+│ I  │                              │  R   │
+│ D  │                              │  O   │
+│ E  │                              │  F   │
+│ B  │                              │  I   │
+│ A  │                              │  L   │
+│ R  │                              │  E   │
+├────┴──────────────────────────────┴──────┤
+│              Footer                      │
+└──────────────────────────────────────────┘
+```
+
+---
+
+این راهنما رو سیو کن و در چت جدید بهم بده تا ادامه بدم! 🚀
+
+
+README.md
+# AranApp
+
+یک سوپراپ ماولار مبتنی بر وب۳ و بلاکچین با الکترون
+
+## ویگیهای اصلی
+- معماری ماولار کامل
+- سیستم Event Bus برای ارتباط بین ماولها
+- 8 اکاردئون برای دسترسی سریع به ابزارها
+- سیستم تبهای پیشرفته
+- پشتیبانی از تم روشن و تاریک
+- بروزر دسکتاپی با الکترون
+
+## نصب و اجرا
+
+\\\ash
+npm install
+npm run electron
+\\\
+
+## ساختار پروه
+- هسته اصلی: App.jsx, EventBus.js, GlobalState.jsx
+- قطعات UI: Header, Footer, 6 Sidebar, TabSystem
+- ماولها: در پوشه modules/
+
+## نسخه
+v1.0.0 - هسته اولیه
+
+
+Sidebar1.jsx
+import { useGlobal } from './GlobalState'
+import { useState, useEffect, Suspense, lazy } from 'react'
+import { getModulesBySidebar, getModuleStatus, loadModule, getStatusColor, getStatusIcon } from './moduleLoader'
+
+export default function Sidebar1() {
+  const { addTab, activeAccordion, openAccordion } = useGlobal()
+  const isOpen = activeAccordion === 'sidebar1'
+  const isAnyRightOpen = ['sidebar1', 'sidebar2', 'sidebar3'].includes(activeAccordion)
+  
+  const [modules, setModules] = useState([])
+  const [loadedModules, setLoadedModules] = useState({})
+
+  useEffect(() => {
+    // بارگذاری لیست ماولها
+    const sidebarModules = getModulesBySidebar('sidebar1')
+    const modulesWithStatus = sidebarModules.map(m => ({
+      ...m,
+      status: getModuleStatus(m.id)
+    }))
+    setModules(modulesWithStatus)
+  }, [])
+
+  const handleModuleClick = async (module) => {
+    if (module.status === 'ready') {
+      // اگه ماول آماده هست بارگذاری کن
+      if (!loadedModules[module.id]) {
+        const ModuleComponent = await loadModule(module.id)
+        if (ModuleComponent) {
+          setLoadedModules(prev => ({
+            ...prev,
+            [module.id]: ModuleComponent
+          }))
+        }
+      }
+      
+      addTab({ 
+        ...module, 
+        active: true,
+        component: loadedModules[module.id]
+      })
+      openAccordion(null)
+    } else if (module.status === 'not-installed') {
+      alert(`ماول ${module.name} هنوز نصب نشده است`)
+    } else if (module.status === 'missing-dependencies') {
+      alert(`ماول ${module.name} به ماولهای دیگری نیاز دارد`)
+    }
+  }
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('sidebar1')}
+        style={{
+          position: 'fixed',
+          right: isAnyRightOpen ? '220px' : 0,
+          top: 'calc(var(--header-height) + 20px)',
+          width: '35px',
+          height: '70px',
+          background: isOpen ? 'rgba(102, 126, 234, 0.95)' : 'rgba(102, 126, 234, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '10px 0 0 10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 100,
+          transition: 'right 0.3s ease, background 0.3s ease',
+          writingMode: 'vertical-rl',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          color: 'white',
+          boxShadow: isOpen ? '0 4px 12px rgba(102, 126, 234, 0.5)' : 'none'
+        }}
+      >
+        مالی
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        right: isOpen ? 0 : '-220px',
+        top: 'var(--header-height)',
+        bottom: 'var(--footer-height)',
+        width: '220px',
+        background: 'rgba(248, 250, 252, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderLeft: '1px solid var(--border)',
+        zIndex: 99,
+        padding: '10px',
+        overflowY: 'auto',
+        transition: 'right 0.3s ease'
+      }}>
+        {modules.map(module => {
+          const statusColor = getStatusColor(module.status)
+          const statusIcon = getStatusIcon(module.status)
+          
+          return (
+            <button
+              key={module.id}
+              onClick={() => handleModuleClick(module)}
+              disabled={module.status !== 'ready'}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                marginBottom: '6px',
+                background: module.status === 'ready' ? 'white' : '#f3f4f6',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                transition: 'var(--transition)',
+                fontSize: '12px',
+                textAlign: 'right',
+                cursor: module.status === 'ready' ? 'pointer' : 'not-allowed',
+                opacity: module.status === 'ready' ? 1 : 0.5,
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                if (module.status === 'ready') {
+                  e.currentTarget.style.transform = 'translateX(-3px)'
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+                  e.currentTarget.style.background = 'var(--primary-color)'
+                  e.currentTarget.style.color = 'white'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (module.status === 'ready') {
+                  e.currentTarget.style.transform = 'translateX(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.background = 'white'
+                  e.currentTarget.style.color = 'var(--text-primary)'
+                }
+              }}
+            >
+              <span style={{ fontSize: '18px', filter: module.status === 'ready' ? 'none' : 'grayscale(1)' }}>
+                {module.icon}
+              </span>
+              <span style={{ flex: 1 }}>{module.name}</span>
+              <span style={{ 
+                fontSize: '10px', 
+                color: statusColor,
+                fontWeight: 'bold'
+              }}>
+                {statusIcon}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
+
+Sidebar2.jsx
+import { useGlobal } from './GlobalState'
+
+export default function Sidebar2() {
+  const { addTab, activeAccordion, openAccordion } = useGlobal()
+  const isOpen = activeAccordion === 'sidebar2'
+  const isAnyRightOpen = ['sidebar1', 'sidebar2', 'sidebar3'].includes(activeAccordion)
+
+  const items = [
+    { id: 'calculator', title: 'ماشینحساب', icon: '🔢' },
+    { id: 'calendar', title: 'تقویم', icon: '📅' },
+    { id: 'notes', title: 'یادداشت', icon: '📝' },
+    { id: 'chart', title: 'نمودار', icon: '📊' },
+    { id: 'converter', title: 'تبدیل واحد', icon: '🔄' },
+    { id: 'timer', title: 'زمانسنج', icon: '⏱️' },
+    { id: 'scanner', title: 'اسکنر', icon: '📷' },
+    { id: 'qr', title: 'QR کد', icon: '⚡' },
+    { id: 'weather', title: 'آبوهوا', icon: '🌤️' },
+    { id: 'maps', title: 'نقشه', icon: '🗺️' }
+  ]
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('sidebar2')}
+        style={{
+          position: 'fixed',
+          right: isAnyRightOpen ? '220px' : 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: '35px',
+          height: '70px',
+          background: isOpen ? 'rgba(118, 75, 162, 0.95)' : 'rgba(118, 75, 162, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '10px 0 0 10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 100,
+          transition: 'right 0.3s ease, background 0.3s ease',
+          writingMode: 'vertical-rl',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          color: 'white',
+          boxShadow: isOpen ? '0 4px 12px rgba(118, 75, 162, 0.5)' : 'none'
+        }}
+      >
+        ابزار
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        right: isOpen ? 0 : '-220px',
+        top: 'var(--header-height)',
+        bottom: 'var(--footer-height)',
+        width: '220px',
+        background: 'rgba(248, 250, 252, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderLeft: '1px solid var(--border)',
+        zIndex: 99,
+        padding: '10px',
+        overflowY: 'auto',
+        transition: 'right 0.3s ease'
+      }}>
+        {items.map(item => (
+          <button
+            key={item.id}
+            onClick={() => {
+              addTab({ ...item, active: true })
+              openAccordion(null)
+            }}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              marginBottom: '6px',
+              background: 'white',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              transition: 'var(--transition)',
+              fontSize: '12px',
+              textAlign: 'right'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateX(-3px)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+              e.currentTarget.style.background = 'var(--primary-color)'
+              e.currentTarget.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateX(0)'
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>{item.icon}</span>
+            <span>{item.title}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+
+Sidebar3.jsx
+import { useGlobal } from './GlobalState'
+
+export default function Sidebar3() {
+  const { addTab, activeAccordion, openAccordion } = useGlobal()
+  const isOpen = activeAccordion === 'sidebar3'
+  const isAnyRightOpen = ['sidebar1', 'sidebar2', 'sidebar3'].includes(activeAccordion)
+
+  const items = [
+    { id: 'market', title: 'فروشگاه', icon: '🛒' },
+    { id: 'food-delivery', title: 'سفارش غذا', icon: '🍔' },
+    { id: 'hotel', title: 'رزرو هتل', icon: '🏨' },
+    { id: 'flight', title: 'بلیط پرواز', icon: '✈️' },
+    { id: 'ticket', title: 'بلیط رویداد', icon: '🎫' },
+    { id: 'grocery', title: 'خرید مواد غذایی', icon: '🛍️' },
+    { id: 'fashion', title: 'مد و پوشاک', icon: '👔' },
+    { id: 'electronics', title: 'لوازم الکترونیک', icon: '📱' },
+    { id: 'furniture', title: 'مبلمان', icon: '🛋️' },
+    { id: 'auction', title: 'حراج', icon: '🔨' }
+  ]
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('sidebar3')}
+        style={{
+          position: 'fixed',
+          right: isAnyRightOpen ? '220px' : 0,
+          bottom: 'calc(var(--footer-height) + 20px)',
+          width: '35px',
+          height: '70px',
+          background: isOpen ? 'rgba(59, 130, 246, 0.95)' : 'rgba(59, 130, 246, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '10px 0 0 10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 100,
+          transition: 'right 0.3s ease, background 0.3s ease',
+          writingMode: 'vertical-rl',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          color: 'white',
+          boxShadow: isOpen ? '0 4px 12px rgba(59, 130, 246, 0.5)' : 'none'
+        }}
+      >
+        خرید
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        right: isOpen ? 0 : '-220px',
+        top: 'var(--header-height)',
+        bottom: 'var(--footer-height)',
+        width: '220px',
+        background: 'rgba(248, 250, 252, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderLeft: '1px solid var(--border)',
+        zIndex: 99,
+        padding: '10px',
+        overflowY: 'auto',
+        transition: 'right 0.3s ease'
+      }}>
+        {items.map(item => (
+          <button
+            key={item.id}
+            onClick={() => {
+              addTab({ ...item, active: true })
+              openAccordion(null)
+            }}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              marginBottom: '6px',
+              background: 'white',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              transition: 'var(--transition)',
+              fontSize: '12px',
+              textAlign: 'right'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateX(-3px)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+              e.currentTarget.style.background = 'var(--primary-color)'
+              e.currentTarget.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateX(0)'
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>{item.icon}</span>
+            <span>{item.title}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+
+Sidebar4.jsx
+import { useGlobal } from './GlobalState'
+import { useState } from 'react'
+
+export default function Sidebar4() {
+  const { activeAccordion, openAccordion } = useGlobal()
+  const isOpen = activeAccordion === 'sidebar4'
+  const isAnyLeftOpen = ['sidebar4', 'sidebar5', 'sidebar6'].includes(activeAccordion)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const allModules = [
+    { id: 'wallet', title: 'کیف پول', icon: '💰' },
+    { id: 'calculator', title: 'ماشینحساب', icon: '🔢' },
+    { id: 'health', title: 'سلامت', icon: '🏥' },
+    { id: 'games', title: 'بازی', icon: '🎮' }
+  ]
+
+  const filteredModules = allModules.filter(m => 
+    m.title.includes(searchQuery)
+  )
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('sidebar4')}
+        style={{
+          position: 'fixed',
+          left: isAnyLeftOpen ? '220px' : 0,
+          top: 'calc(var(--header-height) + 20px)',
+          width: '35px',
+          height: '70px',
+          background: isOpen ? 'rgba(16, 185, 129, 0.95)' : 'rgba(16, 185, 129, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '0 10px 10px 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 100,
+          transition: 'left 0.3s ease, background 0.3s ease',
+          writingMode: 'vertical-rl',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          color: 'white',
+          boxShadow: isOpen ? '0 4px 12px rgba(16, 185, 129, 0.5)' : 'none'
+        }}
+      >
+        شخصی
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        left: isOpen ? 0 : '-220px',
+        top: 'var(--header-height)',
+        bottom: 'var(--footer-height)',
+        width: '220px',
+        background: 'rgba(248, 250, 252, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '1px solid var(--border)',
+        zIndex: 99,
+        padding: '10px',
+        overflowY: 'auto',
+        transition: 'left 0.3s ease'
+      }}>
+        <div style={{ 
+          padding: '15px',
+          textAlign: 'center',
+          color: 'var(--text-secondary)',
+          fontSize: '13px',
+          marginBottom: '15px'
+        }}>
+          ابزارهای شخصی خود را اضافه کنید
+        </div>
+
+        <input
+          type="text"
+          placeholder="جستجوی ابزار..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '10px',
+            marginBottom: '10px',
+            borderRadius: '8px',
+            border: '1px solid var(--border)',
+            fontSize: '12px',
+            textAlign: 'right'
+          }}
+        />
+
+        {filteredModules.map(item => (
+          <button
+            key={item.id}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              marginBottom: '6px',
+              background: 'white',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              transition: 'var(--transition)',
+              fontSize: '12px',
+              textAlign: 'right'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--primary-color)'
+              e.currentTarget.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>{item.icon}</span>
+            <span style={{ flex: 1 }}>{item.title}</span>
+            <span style={{ fontSize: '16px' }}>📌</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+
+Sidebar5.jsx
+import { useGlobal } from './GlobalState'
+
+export default function Sidebar5() {
+  const { addTab, activeAccordion, openAccordion } = useGlobal()
+  const isOpen = activeAccordion === 'sidebar5'
+  const isAnyLeftOpen = ['sidebar4', 'sidebar5', 'sidebar6'].includes(activeAccordion)
+
+  const items = [
+    { id: 'health', title: 'سلامت', icon: '🏥' },
+    { id: 'fitness', title: 'تناسب اندام', icon: '💪' },
+    { id: 'nutrition', title: 'تغذیه', icon: '🥗' },
+    { id: 'pharmacy', title: 'داروخانه', icon: '💊' },
+    { id: 'meditation', title: 'مدیتیشن', icon: '🧘' },
+    { id: 'mental', title: 'سلامت روان', icon: '🧠' },
+    { id: 'beauty', title: 'زیبایی', icon: '💄' },
+    { id: 'skincare', title: 'مراقبت پوست', icon: '🧴' },
+    { id: 'doctor', title: 'پزشک', icon: '👨⚕️' },
+    { id: 'lab', title: 'آزمایشگاه', icon: '🔬' }
+  ]
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('sidebar5')}
+        style={{
+          position: 'fixed',
+          left: isAnyLeftOpen ? '220px' : 0,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: '35px',
+          height: '70px',
+          background: isOpen ? 'rgba(251, 146, 60, 0.95)' : 'rgba(251, 146, 60, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '0 10px 10px 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 100,
+          transition: 'left 0.3s ease, background 0.3s ease',
+          writingMode: 'vertical-rl',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          color: 'white',
+          boxShadow: isOpen ? '0 4px 12px rgba(251, 146, 60, 0.5)' : 'none'
+        }}
+      >
+        سلامت
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        left: isOpen ? 0 : '-220px',
+        top: 'var(--header-height)',
+        bottom: 'var(--footer-height)',
+        width: '220px',
+        background: 'rgba(248, 250, 252, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '1px solid var(--border)',
+        zIndex: 99,
+        padding: '10px',
+        overflowY: 'auto',
+        transition: 'left 0.3s ease'
+      }}>
+        {items.map(item => (
+          <button
+            key={item.id}
+            onClick={() => {
+              addTab({ ...item, active: true })
+              openAccordion(null)
+            }}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              marginBottom: '6px',
+              background: 'white',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              transition: 'var(--transition)',
+              fontSize: '12px',
+              textAlign: 'right'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateX(3px)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+              e.currentTarget.style.background = 'var(--primary-color)'
+              e.currentTarget.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateX(0)'
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>{item.icon}</span>
+            <span>{item.title}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+
+Sidebar6.jsx
+import { useGlobal } from './GlobalState'
+
+export default function Sidebar6() {
+  const { addTab, activeAccordion, openAccordion } = useGlobal()
+  const isOpen = activeAccordion === 'sidebar6'
+  const isAnyLeftOpen = ['sidebar4', 'sidebar5', 'sidebar6'].includes(activeAccordion)
+
+  const items = [
+    { id: 'games', title: 'بازی', icon: '🎮' },
+    { id: 'movies', title: 'فیلم', icon: '🎬' },
+    { id: 'music', title: 'موسیقی', icon: '🎵' },
+    { id: 'books', title: 'کتاب', icon: '📚' },
+    { id: 'events', title: 'رویداد', icon: '🎪' },
+    { id: 'podcast', title: 'پادکست', icon: '🎙️' },
+    { id: 'sports', title: 'ورزش', icon: '⚽' },
+    { id: 'streaming', title: 'پخش زنده', icon: '📺' },
+    { id: 'social', title: 'شبکه اجتماعی', icon: '👥' },
+    { id: 'news', title: 'اخبار', icon: '📰' }
+  ]
+
+  return (
+    <>
+      <div
+        onClick={() => openAccordion('sidebar6')}
+        style={{
+          position: 'fixed',
+          left: isAnyLeftOpen ? '220px' : 0,
+          bottom: 'calc(var(--footer-height) + 20px)',
+          width: '35px',
+          height: '70px',
+          background: isOpen ? 'rgba(236, 72, 153, 0.95)' : 'rgba(236, 72, 153, 0.3)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '0 10px 10px 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 100,
+          transition: 'left 0.3s ease, background 0.3s ease',
+          writingMode: 'vertical-rl',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          color: 'white',
+          boxShadow: isOpen ? '0 4px 12px rgba(236, 72, 153, 0.5)' : 'none'
+        }}
+      >
+        سرگرمی
+      </div>
+
+      <div style={{
+        position: 'fixed',
+        left: isOpen ? 0 : '-220px',
+        top: 'var(--header-height)',
+        bottom: 'var(--footer-height)',
+        width: '220px',
+        background: 'rgba(248, 250, 252, 0.98)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '1px solid var(--border)',
+        zIndex: 99,
+        padding: '10px',
+        overflowY: 'auto',
+        transition: 'left 0.3s ease'
+      }}>
+        {items.map(item => (
+          <button
+            key={item.id}
+            onClick={() => {
+              addTab({ ...item, active: true })
+              openAccordion(null)
+            }}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              marginBottom: '6px',
+              background: 'white',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              transition: 'var(--transition)',
+              fontSize: '12px',
+              textAlign: 'right'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateX(3px)'
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+              e.currentTarget.style.background = 'var(--primary-color)'
+              e.currentTarget.style.color = 'white'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateX(0)'
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.background = 'white'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+          >
+            <span style={{ fontSize: '18px' }}>{item.icon}</span>
+            <span>{item.title}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+
+TabSystem.jsx
+import { useGlobal } from './GlobalState'
+
+export default function TabSystem() {
+  const { activeTabs, removeTab, setCurrentTab } = useGlobal()
+
+  if (activeTabs.length === 0) return null
+
+  return (
+    <div style={{
+      display: 'flex',
+      gap: '5px',
+      padding: '10px 15px',
+      background: 'var(--surface)',
+      borderBottom: '1px solid var(--border)',
+      overflowX: 'auto',
+      minHeight: '50px'
+    }}>
+      {activeTabs.map(tab => (
+        <div
+          key={tab.id}
+          onClick={() => setCurrentTab(tab.id)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '10px 20px',
+            background: tab.active ? 'var(--primary-color)' : 'var(--background)',
+            color: tab.active ? 'white' : 'var(--text-primary)',
+            borderRadius: 'var(--border-radius)',
+            border: '1px solid var(--border)',
+            whiteSpace: 'nowrap',
+            cursor: 'pointer',
+            transition: 'var(--transition)'
+          }}
+        >
+          <span style={{ fontSize: '20px' }}>{tab.icon}</span>
+          <span style={{ fontWeight: tab.active ? 'bold' : 'normal' }}>{tab.title}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              removeTab(tab.id)
+            }}
+            style={{
+              width: '22px',
+              height: '22px',
+              borderRadius: '50%',
+              background: tab.active ? 'rgba(255,255,255,0.3)' : 'var(--border)',
+              color: tab.active ? 'white' : 'var(--text-primary)',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'var(--transition)'
+            }}
+            onMouseEnter={(e) => e.target.style.background = tab.active ? 'rgba(255,255,255,0.5)' : 'var(--text-secondary)'}
+            onMouseLeave={(e) => e.target.style.background = tab.active ? 'rgba(255,255,255,0.3)' : 'var(--border)'}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+
+variables.css
+:root {
+  --primary-color: #2563eb;
+  --secondary-color: #64748b;
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border: #e2e8f0;
+  --header-height: 60px;
+  --footer-height: 50px;
+  --sidebar-width: 280px;
+  --border-radius: 8px;
+  --transition: 0.3s ease;
+}
+
+[data-theme='dark'] {
+  --primary-color: #3b82f6;
+  --secondary-color: #94a3b8;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --border: #334155;
+}
+
+
+
+vite.config.js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3000,
+    open: true
+  }
+})
+
+roadmaptocomplete.txt   (yadet bashe in file mohtavash eshtebash va bayad bar hasbe icon haye barname tashih beshe)
+# نقشه راه کامل AranApp - 100 ماول
+
+## 1. مالی و پرداخت (10 ماول)
+1. wallet - کیف پول دیجیتال
+2. exchange - صرافی ارز
+3. payment - پرداخت و فاکتور
+4. investment - سرمایهگذاری
+5. budget - مدیریت بودجه
+6. loan - وام و اقساط
+7. insurance - بیمه
+8. tax - مالیات
+9. crypto - رمزارز
+10. nft - بازار NFT
+
+## 2. خرید و فروش (10 ماول)
+11. market - فروشگاه
+12. auction - حراج
+13. rent - اجاره
+14. booking - رزرو
+15. food-delivery - سفارش غذا
+16. grocery - خرید مواد غذایی
+17. fashion - مد و پوشاک
+18. electronics - لوازم الکترونیک
+19. furniture - مبلمان
+20. handmade - دستساز
+
+## 3. آموزش و مهارت (10 ماول)
+21. courses - دورههای آموزشی
+22. language - زبان
+23. coding - برنامهنویسی
+24. design - طراحی
+25. music - موسیقی
+26. art - هنر
+27. business - کسبوکار
+28. marketing - بازاریابی
+29. exam - آزمون
+30. library - کتابخانه
+
+## 4. سلامت و زیبایی (10 ماول)
+31. health - سلامت
+32. fitness - تناسب اندام
+33. nutrition - تغذیه
+34. mental - سلامت روان
+35. beauty - زیبایی
+36. skincare - مراقبت پوست
+37. pharmacy - داروخانه
+38. doctor - پزشک
+39. lab - آزمایشگاه
+40. hospital - بیمارستان
+
+## 5. سفر و گردشگری (10 ماول)
+41. travel - سفر
+42. hotel - هتل
+43. flight - پرواز
+44. visa - ویزا
+45. tour - تور
+46. restaurant - رستوران
+47. taxi - تاکسی
+48. car-rental - اجاره ماشین
+49. camping - کمپینگ
+50. cruise - کروز
+
+## 6. سرگرمی و بازی (10 ماول)
+51. games - بازی
+52. movies - فیلم
+53. music-stream - موسیقی
+54. podcast - پادکست
+55. books - کتاب
+56. sports - ورزش
+57. events - رویداد
+58. ticket - بلیط
+59. casino - کازینو
+60. lottery - قرعهکشی
+
+## 7. اجتماعی و ارتباطات (10 ماول)
+61. chat - چت
+62. video-call - تماس تصویری
+63. social - شبکه اجتماعی
+64. dating - دوستیابی
+65. forum - انجمن
+66. blog - وبلاگ
+67. news - اخبار
+68. weather - آبوهوا
+69. translate - ترجمه
+70. voice - پیام صوتی
+
+## 8. کار و شغل (10 ماول)
+71. jobs - کاریابی
+72. freelance - فریلنسر
+73. resume - رزومه
+74. interview - مصاحبه
+75. coworking - فضای کار
+76. project - پروه
+77. task - وظایف
+78. team - تیم
+79. meeting - جلسه
+80. crm - مدیریت مشتری
+
+## 9. خانه و زندگی (10 ماول)
+81. smart-home - خانه هوشمند
+82. cleaning - نظافت
+83. repair - تعمیرات
+84. garden - باغبانی
+85. pet - حیوان خانگی
+86. cooking - آشپزی
+87. laundry - خشکشویی
+88. security - امنیت
+89. energy - انری
+90. waste - بازیافت
+
+## 10. ابزار و خدمات (10 ماول)
+91. calculator - ماشینحساب
+92. calendar - تقویم
+93. notes - یادداشت
+94. scanner - اسکنر
+95. converter - تبدیل
+96. timer - زمانسنج
+97. maps - نقشه
+98. qr - QR کد
+99. backup - پشتیبان
+100. vpn - VPN
+
+---
+تاریخ ایجاد: 2025-11-29
+وضعیت: 0/100 ماول تکمیل شده
+
+
+
+tracker.json
+{
+  "completed": [],
+  "total": 100
+}
+
+
+ProgressTracker.jsx
+import { useState, useEffect } from 'react'
+
+export default function ProgressTracker() {
+  const [progress, setProgress] = useState(0)
+  const [completed, setCompleted] = useState(0)
+  const [total] = useState(100)
+
+  useEffect(() => {
+    checkProgress()
+  }, [])
+
+  const checkProgress = async () => {
+    try {
+      const response = await fetch('/tracker.json')
+      const data = await response.json()
+      
+      const completedCount = data.completed.length
+      const percentage = Math.round((completedCount / 100) * 100)
+      
+      setCompleted(completedCount)
+      setProgress(percentage)
+    } catch (error) {
+      console.error('خطا در بررسی پیشرفت:', error)
+      setProgress(0)
+      setCompleted(0)
+    }
+  }
+
+  const radius = 30
+  const circumference = 2 * Math.PI * radius
+  const offset = circumference - (progress / 100) * circumference
+
+  return (
+    <div 
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '70px',
+        height: '70px',
+        marginLeft: '35px'
+      }}
+      title={`${completed} از ${total} ماول تکمیل شده`}
+    >
+      <svg width="70" height="70" style={{ transform: 'rotate(-90deg)' }}>
+        <circle
+          cx="35"
+          cy="35"
+          r={radius}
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="5"
+          fill="none"
+        />
+        <circle
+          cx="35"
+          cy="35"
+          r={radius}
+          stroke="white"
+          strokeWidth="4"
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{
+            transition: 'stroke-dashoffset 0.5s ease',
+            filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.6))'
+          }}
+        />
+      </svg>
+      
+      <div style={{
+        position: 'absolute',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <span style={{
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: 'white',
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          lineHeight: '1'
+        }}>
+          {progress}%
+        </span>
+        <span style={{
+          fontSize: '8px',
+          color: 'rgba(255,255,255,0.8)',
+          marginTop: '2px'
+        }}>
+          {completed}/{total}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+
+
+
+ E:\projects\aranapp\modules\calculator\index,jsx
+// E:\projects\aranapp\modules\utils\calculator\index.jsx
+import { useState } from 'react'
+import EventBus from '../../EventBus'
+
+export default function Calculator() {
+  const [display, setDisplay] = useState('0')
+  const [previous, setPrevious] = useState('')
+  const [operation, setOperation] = useState('')
+  const [waitingForNewValue, setWaitingForNewValue] = useState(false)
+
+  const inputNumber = (num) => {
+    if (waitingForNewValue) {
+      setDisplay(String(num))
+      setWaitingForNewValue(false)
+    } else {
+      setDisplay(display === '0' ? String(num) : display + num)
+    }
+  }
+
+  const inputDot = () => {
+    if (waitingForNewValue) {
+      setDisplay('0.')
+      setWaitingForNewValue(false)
+    } else if (display.indexOf('.') === -1) {
+      setDisplay(display + '.')
+    }
+  }
+
+  const clear = () => {
+    setDisplay('0')
+    setPrevious('')
+    setOperation('')
+    setWaitingForNewValue(false)
+  }
+
+  const deleteLast = () => {
+    if (display.length > 1) {
+      setDisplay(display.slice(0, -1))
+    } else {
+      setDisplay('0')
+    }
+  }
+
+  const performOperation = (nextOperation) => {
+    const inputValue = parseFloat(display)
+
+    if (previous === '') {
+      setPrevious(display)
+    } else if (operation) {
+      const currentValue = parseFloat(previous)
+      const newValue = calculate(currentValue, inputValue, operation)
+
+      setDisplay(String(newValue))
+      setPrevious(String(newValue))
+    }
+
+    setWaitingForNewValue(true)
+    setOperation(nextOperation)
+  }
+
+  const calculate = (firstValue, secondValue, operation) => {
+    switch (operation) {
+      case '+': return firstValue + secondValue
+      case '-': return firstValue - secondValue
+      case '×': return firstValue * secondValue
+      case '÷': return firstValue / secondValue
+      case '%': return firstValue % secondValue
+      default: return secondValue
+    }
+  }
+
+  const performEquals = () => {
+    const inputValue = parseFloat(display)
+
+    if (previous && operation) {
+      const currentValue = parseFloat(previous)
+      const newValue = calculate(currentValue, inputValue, operation)
+
+      setDisplay(String(newValue))
+      setPrevious('')
+      setOperation('')
+      setWaitingForNewValue(true)
+
+      EventBus.emit('calculator:result', {
+        expression: `${currentValue} ${operation} ${inputValue} = ${newValue}`,
+        result: newValue
+      })
+    }
+  }
+
+  return (
+    <div style={{
+      padding: '30px',
+      maxWidth: '420px',
+      margin: '0 auto',
+      fontFamily: 'Vazirmatn, sans-serif'
+    }}>
+      {/* عنوان */}
+      <div style={{
+        textAlign: 'center',
+        marginBottom: '24px',
+        color: '#e0e0ff'
+      }}>
+        <h2 style={{
+          fontSize: '28px',
+          fontWeight: '700',
+          background: 'linear-gradient(90deg, #00d4ff, #ff2eff)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          ماشین حساب هوشمند
+        </h2>
+        <small style={{ color: '#888', fontSize: '14px' }}>
+          آران‌اپ — دقیق، سریع، زیبا
+        </small>
+      </div>
+
+      {/* نمایشگر */}
+      <div style={{
+        background: '#1a1a2e',
+        borderRadius: '20px',
+        padding: '24px',
+        marginBottom: '20px',
+        boxShadow: 'inset 0 8px 20px rgba(0,0,0,0.4)',
+        border: '1px solid #383850'
+      }}>
+        <div style={{
+          textAlign: 'left',
+          fontSize: '16px',
+          color: '#888',
+          marginBottom: '8px'
+        }}>
+          {previous && `${previous} ${operation}`}
+        </div>
+        <div style={{
+          textAlign: 'right',
+          fontSize: '42px',
+          fontWeight: '600',
+          color: 'white',
+          wordBreak: 'break-all'
+        }}>
+          {display}
+        </div>
+      </div>
+
+      {/* دکمه‌ها */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '14px'
+      }}>
+        <button onClick={clear} style={btnStyle('danger')}>
+          C
+        </button>
+        <button onClick={deleteLast} style={btnStyle('warning')}>
+          ⌫
+        </button>
+        <button onClick={() => performOperation('%')} style={btnStyle('operator')}>
+          %
+        </button>
+        <button onClick={() => performOperation('÷')} style={btnStyle('operator')}>
+          ÷
+        </button>
+
+        <button onClick={() => inputNumber(7)} style={btnStyle('number')}>7</button>
+        <button onClick={() => inputNumber(8)} style={btnStyle('number')}>8</button>
+        <button onClick={() => inputNumber(9)} style={btnStyle('number')}>9</button>
+        <button onClick={() => performOperation('×')} style={btnStyle('operator')}>
+          ×
+        </button>
+
+        <button onClick={() => inputNumber(4)} style={btnStyle('number')}>4</button>
+        <button onClick={() => inputNumber(5)} style={btnStyle('number')}>5</button>
+        <button onClick={() => inputNumber(6)} style={btnStyle('number')}>6</button>
+        <button onClick={() => performOperation('-')} style={btnStyle('operator')}>
+          −
+        </button>
+
+        <button onClick={() => inputNumber(1)} style={btnStyle('number')}>1</button>
+        <button onClick={() => inputNumber(2)} style={btnStyle('number')}>2</button>
+        <button onClick={() => inputNumber(3)} style={btnStyle('number')}>3</button>
+        <button onClick={() => performOperation('+')} style={btnStyle('operator')}>
+          +
+        </button>
+
+        <button onClick={() => inputNumber(0)} style={btnStyle('number', 'span2')}>
+          0
+        </button>
+        <button onClick={inputDot} style={btnStyle('number')}>.</button>
+        <button onClick={performEquals} style={btnStyle('equals')}>
+          =
+        </button>
+      </div>
+    </div>
+  )
+
+  // استایل‌های دکمه
+  function btnStyle(type, extra = '') {
+    const base = {
+      height: '68px',
+      borderRadius: '18px',
+      border: 'none',
+      fontSize: '24px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+    }
+
+    if (type === 'number') {
+      return { ...base, background: '#2a2a3a', color: 'white', gridColumn: extra }
+    }
+    if (type === 'operator') {
+      return { ...base, background: '#ff9500', color: 'white' }
+    }
+    if (type === 'equals') {
+      return { ...base, background: '#00d4ff', color: 'black', fontWeight: 'bold' }
+    }
+    if (type === 'danger') {
+      return { ...base, background: '#ff3b30', color: 'white' }
+    }
+    if (type === 'warning') {
+      return { ...base, background: '#ffcc00', color: 'black' }
+    }
+  }
+}
+
+
+
+
+
+E:\projects\aranapp\modules\investment\index,jsx
+// E:\projects\aranapp\modules\financial\investment\index.jsx
+import { useState, useEffect } from 'react'
+import EventBus from '../../EventBus'
+
+export default function Investment() {
+  const [message, setMessage] = useState('در حال بارگذاری...')
+
+  useEffect(() => {
+    // ارسال ایونت برای تست
+    EventBus.emit('investment:loaded', {
+      module: 'investment',
+      status: 'ready',
+      timestamp: new Date().toISOString()
+    })
+
+    // پیام نهایی
+    setMessage('من گروک هستم برای چک رو! 🚀')
+  }, [])
+
+  return (
+    <div style={{
+      padding: '40px',
+      maxWidth: '800px',
+      margin: '0 auto',
+      textAlign: 'center',
+      fontFamily: 'Vazirmatn, sans-serif'
+    }}>
+      <div style={{
+        background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+        borderRadius: '30px',
+        padding: '60px 40px',
+        color: 'white',
+        boxShadow: '0 20px 50px rgba(139, 92, 246, 0.4)',
+        marginBottom: '30px'
+      }}>
+        <h1 style={{
+          fontSize: '52px',
+          fontWeight: '900',
+          marginBottom: '20px',
+          textShadow: '0 4px 20px rgba(0,0,0,0.5)'
+        }}>
+          {message}
+        </h1>
+        <p style={{ fontSize: '22px', opacity: 0.95 }}>
+          ماژول سرمایه‌گذاری با موفقیت لود شد
+        </p>
+      </div>
+
+      <div style={{
+        background: '#1f2937',
+        borderRadius: '24px',
+        padding: '32px',
+        color: '#e0e0ff',
+        border: '1px solid #374151'
+      }}>
+        <p style={{ fontSize: '18px', lineHeight: '1.8' }}>
+          این ماژول فقط برای تست لود شدن بود.<br />
+          ساختار دقیقاً مثل والت و ماشین حساب است:<br />
+          ✅ EventBus دارد<br />
+          ✅ useEffect دارد<br />
+          ✅ کاملاً سازگار با ماژول لودر تو
+        </p>
+        <div style={{
+          marginTop: '24px',
+          padding: '16px',
+          background: '#10b981',
+          color: 'white',
+          borderRadius: '16px',
+          fontWeight: 'bold'
+        }}>
+          وضعیت: کاملاً فعال و آماده ✅
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
+
+E:\projects\aranapp\modules\notifications\index,jsx
+import { useState, useEffect } from 'react'
+import EventBus from '../../EventBus'
+
+export default function Notifications() {
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    // گوش دادن به wallet:balance-changed
+    const unsubscribe = EventBus.on('wallet:balance-changed', (data) => {
+      const newNotification = {
+        id: Date.now(),
+        title: data.type === 'charge' ? '✅ شارژ موفق' : '📤 برداشت انجام شد',
+        message: data.type === 'charge' 
+          ? `کیف پول شما ${data.amount}$ شارژ شد`
+          : `${Math.abs(data.amount)}$ از کیف پول شما برداشت شد`,
+        time: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
+        type: data.type === 'charge' ? 'success' : 'info',
+        read: false,
+        data: data
+      }
+
+      setNotifications(prev => [newNotification, ...prev])
+      setUnreadCount(prev => prev + 1)
+
+      // نمایش نوتیفیکیشن سیستمی
+      if (Notification.permission === 'granted') {
+        new Notification('AranApp - کیف پول', {
+          body: newNotification.message,
+          icon: '💰'
+        })
+      }
+    })
+
+    // درخواست دسترسی نوتیفیکیشن
+    if (Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+
+    return () => unsubscribe()
+  }, [])
+
+  const markAsRead = (id) => {
+    setNotifications(notifications.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    ))
+    setUnreadCount(prev => Math.max(0, prev - 1))
+  }
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })))
+    setUnreadCount(0)
+  }
+
+  const clearAll = () => {
+    setNotifications([])
+    setUnreadCount(0)
+  }
+
+  return (
+    <div style={{
+      padding: '30px',
+      maxWidth: '700px',
+      margin: '0 auto'
+    }}>
+      {/* هدر */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '25px'
+      }}>
+        <div>
+          <h2 style={{ fontSize: '28px', marginBottom: '5px' }}>
+            🔔 اعلان‌ها
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+            {unreadCount > 0 ? `${unreadCount} اعلان خوانده نشده` : 'همه اعلان‌ها خوانده شده'}
+          </p>
+        </div>
+
+        {notifications.length > 0 && (
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--primary-color)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                ✓ خواندن همه
+              </button>
+            )}
+            <button
+              onClick={clearAll}
+              style={{
+                padding: '8px 16px',
+                background: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '13px',
+                cursor: 'pointer'
+              }}
+            >
+              🗑️ پاک کردن همه
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* لیست نوتیفیکیشن‌ها */}
+      {notifications.length === 0 ? (
+        <div style={{
+          textAlign: 'center',
+          padding: '60px 20px',
+          background: 'var(--surface)',
+          borderRadius: '16px',
+          border: '1px solid var(--border)'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '20px' }}>🔕</div>
+          <p style={{ fontSize: '16px', color: 'var(--text-secondary)' }}>
+            هیچ اعلانی وجود ندارد
+          </p>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '10px' }}>
+            برو کیف پول رو شارژ کن تا اعلان دریافت کنی! 💰
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {notifications.map(notification => (
+            <div
+              key={notification.id}
+              onClick={() => !notification.read && markAsRead(notification.id)}
+              style={{
+                padding: '20px',
+                background: notification.read ? 'var(--surface)' : 'white',
+                borderRadius: '12px',
+                border: notification.read ? '1px solid var(--border)' : '2px solid var(--primary-color)',
+                cursor: notification.read ? 'default' : 'pointer',
+                transition: 'all 0.2s',
+                position: 'relative'
+              }}
+            >
+              {!notification.read && (
+                <div style={{
+                  position: 'absolute',
+                  top: '20px',
+                  left: '20px',
+                  width: '10px',
+                  height: '10px',
+                  background: 'var(--primary-color)',
+                  borderRadius: '50%'
+                }} />
+              )}
+
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'start' }}>
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '12px',
+                  background: notification.type === 'success' ? '#d1fae5' : '#dbeafe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  flexShrink: 0
+                }}>
+                  {notification.type === 'success' ? '💰' : 'ℹ️'}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontWeight: 'bold',
+                    fontSize: '15px',
+                    marginBottom: '5px',
+                    color: notification.read ? 'var(--text-secondary)' : 'var(--text-primary)'
+                  }}>
+                    {notification.title}
+                  </div>
+                  <div style={{
+                    fontSize: '14px',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '8px'
+                  }}>
+                    {notification.message}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    🕐 {notification.time}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+
+E:\projects\aranapp\modules\wallet\index,jsx
+import { useState, useEffect } from 'react'
+import EventBus from '../../EventBus'
+
+export default function Wallet() {
+  const [balance, setBalance] = useState(1000)
+  const [amount, setAmount] = useState('')
+  const [history, setHistory] = useState([
+    { id: 1, type: 'شارژ', amount: 1000, date: new Date().toLocaleString('fa-IR') }
+  ])
+
+  const handleAddMoney = () => {
+    const value = parseFloat(amount)
+    if (value && value > 0) {
+      const newBalance = balance + value
+      setBalance(newBalance)
+      
+      const newHistory = {
+        id: Date.now(),
+        type: 'شارژ',
+        amount: value,
+        date: new Date().toLocaleString('fa-IR')
+      }
+      setHistory([newHistory, ...history])
+      
+      // ارسال event برای نوتیفیکیشن
+      EventBus.emit('wallet:balance-changed', {
+        oldBalance: balance,
+        newBalance: newBalance,
+        amount: value,
+        type: 'charge'
+      })
+      
+      setAmount('')
+    }
+  }
+
+  const handleWithdraw = () => {
+    const value = parseFloat(amount)
+    if (value && value > 0 && value <= balance) {
+      const newBalance = balance - value
+      setBalance(newBalance)
+      
+      const newHistory = {
+        id: Date.now(),
+        type: 'برداشت',
+        amount: -value,
+        date: new Date().toLocaleString('fa-IR')
+      }
+      setHistory([newHistory, ...history])
+      
+      EventBus.emit('wallet:balance-changed', {
+        oldBalance: balance,
+        newBalance: newBalance,
+        amount: -value,
+        type: 'withdraw'
+      })
+      
+      setAmount('')
+    }
+  }
+
+  return (
+    <div style={{
+      padding: '30px',
+      maxWidth: '800px',
+      margin: '0 auto'
+    }}>
+      {/* کارت موجودی */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        borderRadius: '20px',
+        padding: '40px',
+        color: 'white',
+        marginBottom: '30px',
+        boxShadow: '0 10px 30px rgba(102, 126, 234, 0.3)'
+      }}>
+        <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '10px' }}>
+          موجودی کیف پول
+        </div>
+        <div style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '10px' }}>
+          ${balance.toLocaleString()}
+        </div>
+        <div style={{ fontSize: '13px', opacity: 0.8 }}>
+          💰 دلار آمریکا (USD)
+        </div>
+      </div>
+
+      {/* بخش تراکنش */}
+      <div style={{
+        background: 'white',
+        borderRadius: '16px',
+        padding: '25px',
+        border: '1px solid var(--border)',
+        marginBottom: '25px'
+      }}>
+        <h3 style={{ marginBottom: '20px', fontSize: '18px' }}>
+          💸 تراکنش جدید
+        </h3>
+        
+        <input
+          type="number"
+          placeholder="مبلغ را وارد کنید..."
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '15px',
+            borderRadius: '12px',
+            border: '2px solid var(--border)',
+            fontSize: '16px',
+            marginBottom: '15px',
+            textAlign: 'center',
+            fontWeight: 'bold'
+          }}
+        />
+
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <button
+            onClick={handleAddMoney}
+            disabled={!amount || parseFloat(amount) <= 0}
+            style={{
+              flex: 1,
+              padding: '15px',
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: !amount || parseFloat(amount) <= 0 ? 'not-allowed' : 'pointer',
+              opacity: !amount || parseFloat(amount) <= 0 ? 0.5 : 1,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              if (amount && parseFloat(amount) > 0) {
+                e.target.style.transform = 'translateY(-2px)'
+                e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = 'none'
+            }}
+          >
+            ➕ شارژ کیف پول
+          </button>
+
+          <button
+            onClick={handleWithdraw}
+            disabled={!amount || parseFloat(amount) <= 0 || parseFloat(amount) > balance}
+            style={{
+              flex: 1,
+              padding: '15px',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: (!amount || parseFloat(amount) <= 0 || parseFloat(amount) > balance) ? 'not-allowed' : 'pointer',
+              opacity: (!amount || parseFloat(amount) <= 0 || parseFloat(amount) > balance) ? 0.5 : 1,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              if (amount && parseFloat(amount) > 0 && parseFloat(amount) <= balance) {
+                e.target.style.transform = 'translateY(-2px)'
+                e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)'
+              e.target.style.boxShadow = 'none'
+            }}
+          >
+            ➖ برداشت
+          </button>
+        </div>
+      </div>
+
+      {/* تاریخچه تراکنش‌ها */}
+      <div style={{
+        background: 'white',
+        borderRadius: '16px',
+        padding: '25px',
+        border: '1px solid var(--border)'
+      }}>
+        <h3 style={{ marginBottom: '20px', fontSize: '18px' }}>
+          📋 تاریخچه تراکنش‌ها
+        </h3>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {history.map(item => (
+            <div
+              key={item.id}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '15px',
+                background: 'var(--surface)',
+                borderRadius: '12px',
+                border: '1px solid var(--border)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: item.amount > 0 ? '#d1fae5' : '#fee2e2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px'
+                }}>
+                  {item.amount > 0 ? '📥' : '📤'}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                    {item.type}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    {item.date}
+                  </div>
+                </div>
+              </div>
+              <div style={{
+                fontWeight: 'bold',
+                fontSize: '16px',
+                color: item.amount > 0 ? '#10b981' : '#ef4444'
+              }}>
+                {item.amount > 0 ? '+' : ''}{item.amount.toLocaleString()} $
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}

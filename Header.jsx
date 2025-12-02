@@ -1,8 +1,33 @@
 import { useGlobal } from './GlobalState'
 import ProgressTracker from './ProgressTracker/ProgressTracker'
+import { useState, useEffect } from 'react'
+import { getModuleStatus, loadModule } from './moduleLoader'
 
 export default function Header() {
-  const { theme, setTheme } = useGlobal()
+  const { theme, setTheme, addTab, unreadCount } = useGlobal()
+  const [notificationStatus, setNotificationStatus] = useState('not-installed')
+
+  useEffect(() => {
+    const status = getModuleStatus('notifications')
+    setNotificationStatus(status)
+  }, [])
+
+  const handleNotificationClick = async () => {
+    if (notificationStatus === 'ready') {
+      const NotificationComponent = await loadModule('notifications')
+      if (NotificationComponent) {
+        addTab({
+          id: 'notifications',
+          title: 'اعلانها',
+          icon: '🔔',
+          active: true,
+          component: NotificationComponent
+        })
+      }
+    } else {
+      alert('ماول اعلانها هنوز نصب نشده است')
+    }
+  }
 
   return (
     <header style={{
@@ -14,7 +39,6 @@ export default function Header() {
       gap: '12px',
       boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
     }}>
-      {/* لوگو */}
       <div style={{ 
         fontSize: '20px', 
         fontWeight: 'bold',
@@ -27,21 +51,46 @@ export default function Header() {
 
       <ProgressTracker />
 
-      {/* گزینههای سمت راست (4 تا) */}
-      <button style={iconButtonStyle} title="پروفایل">
-        👤
-      </button>
-      <button style={iconButtonStyle} title="تنظیمات">
-        ⚙️
-      </button>
-      <button style={iconButtonStyle} title="اعلانها">
+      <button style={iconButtonStyle} title="پروفایل">👤</button>
+      <button style={iconButtonStyle} title="تنظیمات">⚙️</button>
+      
+      {/* دکمه نوتیفیکیشن با Badge */}
+      <button 
+        onClick={handleNotificationClick}
+        style={{
+          ...iconButtonStyle,
+          opacity: notificationStatus === 'ready' ? 1 : 0.5,
+          position: 'relative'
+        }} 
+        title={notificationStatus === 'ready' ? 'اعلانها' : 'ماول نصب نشده'}
+      >
         🔔
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute',
+            top: '-4px',
+            right: '-4px',
+            background: '#ef4444',
+            color: 'white',
+            borderRadius: '10px',
+            padding: '2px 6px',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            minWidth: '18px',
+            height: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '2px solid white',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          }}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
       </button>
-      <button style={iconButtonStyle} title="تماس ویدئویی">
-        📹
-      </button>
+      
+      <button style={iconButtonStyle} title="تماس ویدئویی">📹</button>
 
-      {/* آدرس بار - وسط */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -72,13 +121,8 @@ export default function Header() {
         </button>
       </div>
 
-      {/* گزینههای سمت چپ (4 تا) */}
-      <button style={iconButtonStyle} title="چت سریع">
-        💬
-      </button>
-      <button style={iconButtonStyle} title="تغییر زبان">
-        🌐
-      </button>
+      <button style={iconButtonStyle} title="چت سریع">💬</button>
+      <button style={iconButtonStyle} title="تغییر زبان">🌐</button>
       <button 
         onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
         style={iconButtonStyle}
@@ -86,9 +130,7 @@ export default function Header() {
       >
         {theme === 'light' ? '🌙' : '☀️'}
       </button>
-      <button style={iconButtonStyle} title="نشانکها">
-        ⭐
-      </button>
+      <button style={iconButtonStyle} title="نشانکها">⭐</button>
     </header>
   )
 }

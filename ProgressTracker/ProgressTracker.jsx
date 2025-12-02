@@ -1,28 +1,29 @@
 import { useState, useEffect } from 'react'
+import { getInstalledModulesCount, getTotalModulesCount } from '../moduleLoader'
 
 export default function ProgressTracker() {
   const [progress, setProgress] = useState(0)
   const [completed, setCompleted] = useState(0)
-  const [total] = useState(100)
+  const [total, setTotal] = useState(0)
 
   useEffect(() => {
     checkProgress()
   }, [])
 
-  const checkProgress = async () => {
+  const checkProgress = () => {
     try {
-      const response = await fetch('/tracker.json')
-      const data = await response.json()
-      
-      const completedCount = data.completed.length
-      const percentage = Math.round((completedCount / 100) * 100)
+      const completedCount = getInstalledModulesCount()
+      const totalCount = getTotalModulesCount()
+      const percentage = Math.round((completedCount / totalCount) * 100)
       
       setCompleted(completedCount)
+      setTotal(totalCount)
       setProgress(percentage)
     } catch (error) {
       console.error('خطا در بررسی پیشرفت:', error)
       setProgress(0)
       setCompleted(0)
+      setTotal(0)
     }
   }
 

@@ -1,5 +1,5 @@
 import { useGlobal } from './GlobalState'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 
 export default function MainContent() {
   const { activeTabs } = useGlobal()
@@ -17,7 +17,6 @@ export default function MainContent() {
       position: 'relative',
       padding: '10px'
     }}>
-      {/* کادر فریم اصلی */}
       <div style={{
         width: '100%',
         height: '100%',
@@ -29,7 +28,6 @@ export default function MainContent() {
         flexDirection: 'column',
         boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)'
       }}>
-        {/* دکمه ماکزیمایز */}
         <button
           onClick={() => setIsMaximized(!isMaximized)}
           style={{
@@ -52,7 +50,6 @@ export default function MainContent() {
           {isMaximized ? '📉' : '📈'}
         </button>
 
-        {/* محتوای اصلی */}
         <div style={{
           width: '100%',
           height: '100%',
@@ -60,7 +57,6 @@ export default function MainContent() {
           padding: '20px'
         }}>
           {activeTab?.isWelcome ? (
-            // صفحه خوشآمدگویی
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -70,12 +66,7 @@ export default function MainContent() {
               textAlign: 'center',
               gap: '20px'
             }}>
-              <div style={{
-                fontSize: '80px',
-                marginBottom: '20px'
-              }}>
-                🌐
-              </div>
+              <div style={{ fontSize: '80px', marginBottom: '20px' }}>🌐</div>
               <h1 style={{
                 fontSize: '36px',
                 fontWeight: 'bold',
@@ -92,108 +83,29 @@ export default function MainContent() {
                 maxWidth: '600px',
                 lineHeight: '1.8'
               }}>
-                سوپراپ ماولار شما آماده است. از نوار کناری یک ماول انتخاب کنید یا از آدرس بار برای جستجو استفاده کنید.
+                ماول کیف پول 💰 و اعلانها 🔔 نصب شدهاند!
+                <br />
+                از نوار کناری راست کیف پول را باز کنید و آن را شار کنید تا اعلان دریافت کنید.
               </p>
-              <div style={{
-                display: 'flex',
-                gap: '15px',
-                marginTop: '30px'
-              }}>
-                <div style={{
-                  padding: '15px 20px',
-                  background: 'var(--surface)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--border)'
-                }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>💰</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>مالی</div>
-                </div>
-                <div style={{
-                  padding: '15px 20px',
-                  background: 'var(--surface)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--border)'
-                }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔢</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>ابزار</div>
-                </div>
-                <div style={{
-                  padding: '15px 20px',
-                  background: 'var(--surface)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--border)'
-                }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>🛒</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>خرید</div>
-                </div>
-                <div style={{
-                  padding: '15px 20px',
-                  background: 'var(--surface)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--border)'
-                }}>
-                  <div style={{ fontSize: '24px', marginBottom: '8px' }}>🏥</div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>سلامت</div>
-                </div>
-              </div>
             </div>
+          ) : activeTab?.component ? (
+            <Suspense fallback={<div style={{ textAlign: 'center', padding: '50px' }}>در حال بارگذاری...</div>}>
+              <activeTab.component />
+            </Suspense>
           ) : (
-            // نمایش تب فعال
-            <div>
-              {activeTabs.map(tab => (
-                <div 
-                  key={tab.id} 
-                  style={{ 
-                    display: tab.active ? 'block' : 'none',
-                    height: '100%'
-                  }}
-                >
-                  <div style={{
-                    padding: '30px',
-                    background: 'var(--surface)',
-                    borderRadius: '12px',
-                    border: '1px solid var(--border)'
-                  }}>
-                    <h2 style={{ 
-                      fontSize: '28px', 
-                      marginBottom: '15px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px'
-                    }}>
-                      <span style={{ fontSize: '36px' }}>{tab.icon}</span>
-                      {tab.title}
-                    </h2>
-                    <p style={{ 
-                      color: 'var(--text-secondary)', 
-                      fontSize: '15px',
-                      lineHeight: '1.8'
-                    }}>
-                      محتوای ماول {tab.title} اینجا نمایش داده میشود.
-                      <br />
-                      این ماول هنوز ساخته نشده و فقط قالب آن آماده است.
-                    </p>
-                    
-                    <div style={{
-                      marginTop: '30px',
-                      padding: '20px',
-                      background: 'var(--background)',
-                      borderRadius: '8px',
-                      border: '1px dashed var(--border)'
-                    }}>
-                      <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                        📌 این فضا برای بارگذاری ماول واقعی آماده است
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div style={{ padding: '30px' }}>
+              <h2 style={{ fontSize: '28px', marginBottom: '15px' }}>
+                <span style={{ fontSize: '36px', marginLeft: '10px' }}>{activeTab?.icon}</span>
+                {activeTab?.title}
+              </h2>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                این ماول هنوز ساخته نشده است
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* حالت تمام صفحه */}
       {isMaximized && (
         <div style={{
           position: 'fixed',
@@ -225,25 +137,13 @@ export default function MainContent() {
             ✕
           </button>
           
-          <div style={{ marginTop: '60px' }}>
-            {activeTab && !activeTab.isWelcome && (
-              <div>
-                <h1 style={{ 
-                  fontSize: '48px',
-                  marginBottom: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '20px'
-                }}>
-                  <span>{activeTab.icon}</span>
-                  {activeTab.title}
-                </h1>
-                <p style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>
-                  نمای تمام صفحه فعال است
-                </p>
-              </div>
-            )}
-          </div>
+          {activeTab?.component && (
+            <div style={{ marginTop: '60px' }}>
+              <Suspense fallback={<div>در حال بارگذاری...</div>}>
+                <activeTab.component />
+              </Suspense>
+            </div>
+          )}
         </div>
       )}
     </main>
